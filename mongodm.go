@@ -83,6 +83,7 @@ import (
 	"path"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -254,7 +255,6 @@ For example:
 	connection.Register(&Customer{}, "customers")
 */
 func (self *Connection) Register(document IDocumentBase, collectionName string) {
-
 	if document == nil {
 		panic("document can not be nil")
 	}
@@ -275,6 +275,103 @@ func (self *Connection) Register(document IDocumentBase, collectionName string) 
 	} else {
 		fmt.Sprintf("Tried to register type '%v' twice", typeName)
 	}
+
+	self.DropUniqueIndexes(collectionName)
+	self.AddUniqueIndex(document, collectionName)
+}
+
+/*Contributed by avc_dev
+Use unique tag to ensures an index with the given key exists.
+If unique is true, the index must necessarily contain only a single document per Key.
+The Key value is according to the bson > json > lowercase fieldname:
+
+	unique:"true"
+
+		Possible: "true", "false"
+		Default: "none"
+
+For Example:
+
+	type Customer struct {
+		mongodm.DocumentBase `json:",inline" bson:",inline"`
+
+		FirstName string       `json:"firstname" bson:"firstname" unique:"true"`
+		LastName  string       `json:"lastname"	 bson:"lastname" unique:"true"`
+		Address   *Address     `json:"address"	 bson:"address"`
+	}
+*/
+func (self *Connection) AddUniqueIndex(document IDocumentBase, collectionName string) {
+	documentValue := reflect.ValueOf(document).Elem()
+	fieldType := documentValue.Type()
+
+	for fieldIndex := 0; fieldIndex < documentValue.NumField(); fieldIndex++ {
+		bsonTag := fieldType.Field(fieldIndex).Tag.Get("bson")
+		if len(bsonTag) == 0 {
+			bsonTag = fieldType.Field(fieldIndex).Tag.Get("json")
+		}
+		if len(bsonTag) == 0 {
+			bsonTag = strings.ToLower(fieldType.Field(fieldIndex).Name)
+		}
+
+		uniqueTag := fieldType.Field(fieldIndex).Tag.Get("unique")
+
+		if len(uniqueTag) > 0 {
+			unique, err := strconv.ParseBool(uniqueTag)
+			if err != nil {
+				panic(err)
+			}
+
+			if unique {
+				index := mgo.Index{
+					Key:        []string{bsonTag},
+					Unique:     true,
+					DropDups:   true,
+					Background: true, // See notes.
+					Sparse:     true,
+				}
+				collection := self.Session.DB("").C(collectionName)
+				if err := collection.EnsureIndex(index); err != nil {
+					panic(err)
+				}
+			}
+		}
+	}
+}
+
+func (self *Connection) DropUniqueIndexes(collectionName string) {
+	if ok := self.IsCollectionExists(collectionName); ok {
+		collection := self.Session.DB("").C(collectionName)
+		indexes, err := collection.Indexes()
+		if err != nil {
+			fmt.Sprintf("Get Indexes of Model '%v' failed", collectionName)
+		}
+
+		for _, index := range indexes[1:] {
+			if len(index.Key) == 1 {
+				err = collection.DropIndex(index.Key...)
+				if err != nil {
+					fmt.Sprintf("Drop Indexes of Model '%v' failed", collectionName)
+				}
+			}
+		}
+	}
+}
+
+func (self *Connection) IsCollectionExists(collectionName string) bool {
+	db := self.Session.DB("")
+	names, err := db.CollectionNames()
+	if err != nil {
+		fmt.Printf("Failed to get collection names: %v", err)
+		return false
+	}
+
+	for _, name := range names {
+		if name == collectionName {
+			return true
+		}
+	}
+
+	return false
 }
 
 //Opens a database connection manually if the config was set.
