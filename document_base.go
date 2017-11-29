@@ -29,6 +29,16 @@ type DocumentBase struct {
 
 type m map[string]interface{}
 
+// Contributed by avc_dev
+type BeforeSaveHook interface {
+	BeforeSave() error
+}
+
+// Contributed by avc_dev
+type AfterSaveHook interface {
+	AfterSave() error
+}
+
 func (self *DocumentBase) SetCollection(collection *mgo.Collection) {
 	self.collection = collection
 }
@@ -412,6 +422,14 @@ func (self *DocumentBase) Save() error {
 		return &ValidationError{&QueryError{"Document could not be validated"}, issues}
 	}
 
+	// Contributed by avc_dev
+	if hook, ok := self.document.(BeforeSaveHook); ok {
+		err := hook.BeforeSave()
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	/*
 	 * "This behavior ensures that writes performed in the old session are necessarily observed
 	 * when using the new session, as long as it was a strong or monotonic session.
@@ -602,6 +620,14 @@ func (self *DocumentBase) Save() error {
 	 */
 	for field, oldValue := range bufferRegistry {
 		field.Set(oldValue)
+	}
+
+	// Contributed by avc_dev
+	if hook, ok := self.document.(AfterSaveHook); ok {
+		err := hook.AfterSave()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return err

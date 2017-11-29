@@ -490,6 +490,15 @@ User := self.db.Model("User")
 In this case we retrieve a `requestMap` and forward the `password` attribute to our `Validate` method (example above). 
 If you want to use your own regular expression as attribute tags then use the following format: `validation:"/YOUR_REGEX/YOUR_FLAG(S)"` - for example: `validation:"/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}/"`
 
+#### Hooks
+
+You can add special methods to your `Model` that will automatically get called by bongo during certain actions. Currently available hooks are:
+
+* `func (s *ModelStruct) AfterDelete() error`
+* `func (s *ModelStruct) BeforeSave() error`
+* `func (s *ModelStruct) AfterSave() error`
+* `func (s *ModelStruct) BeforeDelete() error`
+
 ## Questions?
 
 Are there any questions or is something not clear enough? Simply open up a ticket or send me an email :)

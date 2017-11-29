@@ -283,7 +283,7 @@ func (self *Connection) Register(document IDocumentBase, collectionName string) 
 /*Contributed by avc_dev
 Use unique tag to ensures an index with the given key exists.
 If unique is true, the index must necessarily contain only a single document per Key.
-The Key value is according to the bson > json > lowercase fieldname:
+The Key value is according to the bson > lowercase fieldname:
 
 	unique:"true"
 
@@ -306,9 +306,6 @@ func (self *Connection) AddUniqueIndex(document IDocumentBase, collectionName st
 
 	for fieldIndex := 0; fieldIndex < documentValue.NumField(); fieldIndex++ {
 		bsonTag := fieldType.Field(fieldIndex).Tag.Get("bson")
-		if len(bsonTag) == 0 {
-			bsonTag = fieldType.Field(fieldIndex).Tag.Get("json")
-		}
 		if len(bsonTag) == 0 {
 			bsonTag = strings.ToLower(fieldType.Field(fieldIndex).Name)
 		}

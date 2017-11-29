@@ -16,6 +16,16 @@ type Model struct {
 	connection *Connection
 }
 
+// Contributed by avc_dev
+type BeforeNewHook interface {
+	BeforeNew() error
+}
+
+// Contributed by avc_dev
+type AfterNewHook interface {
+	AfterNew() error
+}
+
 /*
 To initialize a document for a specific collection you have to call this method. Afterwards you can call all
 ODM functions on the document instance.
@@ -44,8 +54,24 @@ func (self *Model) New(document IDocumentBase, content ...interface{}) (error, m
 	document.SetDocument(document)
 	document.SetConnection(self.connection)
 
+	// Contributed by avc_dev
+	if hook, ok := document.(BeforeNewHook); ok {
+		err := hook.BeforeNew()
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	if len(content) > 0 {
 		return document.Update(content[0])
+	}
+
+	// Contributed by avc_dev
+	if hook, ok := document.(AfterNewHook); ok {
+		err := hook.AfterNew()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return nil, nil
