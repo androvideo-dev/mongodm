@@ -39,6 +39,16 @@ type AfterSaveHook interface {
 	AfterSave() error
 }
 
+// Contributed by avc_dev
+type BeforeDeleteHook interface {
+	BeforeDelete() error
+}
+
+// Contributed by avc_dev
+type AfterDeleteHook interface {
+	AfterDelete() error
+}
+
 func (self *DocumentBase) SetCollection(collection *mgo.Collection) {
 	self.collection = collection
 }
@@ -328,7 +338,23 @@ func (self *DocumentBase) Delete() error {
 
 	if self.Id.Valid() {
 
+		// Contributed by avc_dev
+		if hook, ok := self.document.(BeforeDeleteHook); ok {
+			err := hook.BeforeDelete()
+			if err != nil {
+				panic(err)
+			}
+		}
+
 		self.SetDeleted(true)
+
+		// Contributed by avc_dev
+		if hook, ok := self.document.(AfterDeleteHook); ok {
+			err := hook.AfterDelete()
+			if err != nil {
+				panic(err)
+			}
+		}
 
 		return self.Save()
 	}
