@@ -498,6 +498,8 @@ You can add special methods to your `Model` that will automatically get called b
 * `func (s *ModelStruct) AfterNew() error`
 * `func (s *ModelStruct) BeforeSave() error`
 * `func (s *ModelStruct) AfterSave() error`
+* `func (s *ModelStruct) BeforeDelete() error`
+* `func (s *ModelStruct) AfterDelete() error`
 
 ## Questions?
 
