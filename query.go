@@ -31,6 +31,12 @@ type Query struct {
 	multiple   bool
 }
 
+//see: http://godoc.org/gopkg.in/mgo.v2#Query.Apply
+func (self *Query) Apply(change mgo.Change, result interface{}) (info *mgo.ChangeInfo, err error) {
+
+	return self.collection.Find(self.query).Apply(change, result)
+}
+
 //See: http://godoc.org/labix.org/v2/mgo#Query.Select
 func (self *Query) Select(selector interface{}) *Query {
 
