@@ -342,7 +342,7 @@ func (self *DocumentBase) Delete() error {
 		if hook, ok := self.document.(BeforeDeleteHook); ok {
 			err := hook.BeforeDelete()
 			if err != nil {
-				panic(err)
+				return err
 			}
 		}
 
@@ -352,7 +352,7 @@ func (self *DocumentBase) Delete() error {
 		if hook, ok := self.document.(AfterDeleteHook); ok {
 			err := hook.AfterDelete()
 			if err != nil {
-				panic(err)
+				return err
 			}
 		}
 
@@ -452,7 +452,7 @@ func (self *DocumentBase) Save() error {
 	if hook, ok := self.document.(BeforeSaveHook); ok {
 		err := hook.BeforeSave()
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -652,7 +652,7 @@ func (self *DocumentBase) Save() error {
 	if hook, ok := self.document.(AfterSaveHook); ok {
 		err := hook.AfterSave()
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 

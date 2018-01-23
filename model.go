@@ -58,7 +58,7 @@ func (self *Model) New(document IDocumentBase, content ...interface{}) (error, m
 	if hook, ok := document.(BeforeNewHook); ok {
 		err := hook.BeforeNew()
 		if err != nil {
-			panic(err)
+			return err, nil
 		}
 	}
 
@@ -70,7 +70,7 @@ func (self *Model) New(document IDocumentBase, content ...interface{}) (error, m
 	if hook, ok := document.(AfterNewHook); ok {
 		err := hook.AfterNew()
 		if err != nil {
-			panic(err)
+			return err, nil
 		}
 	}
 
